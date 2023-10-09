@@ -4,37 +4,74 @@
 function performActions() {
     console.log('Performing actions...');
 
-    // Delay before looking for elements
-    setTimeout(() => {
-        // Find all buttons with the text "Delete from profile"
-        const deleteButtons = [...document.querySelectorAll('button')].filter(button => button.textContent.includes('Delete from profile'));
+    // Function to wait for specific text to appear
+    function waitForText(text, callback) {
+        const observer = new MutationObserver(function (mutations, observer) {
+            mutations.forEach(function (mutation) {
+                if (mutation.addedNodes) {
+                    for (let i = 0; i < mutation.addedNodes.length; i++) {
+                        const node = mutation.addedNodes[i];
+                        if (node.textContent.includes(text)) {
+                            observer.disconnect();
+                            callback(node);
+                        }
+                    }
+                }
+            });
+        });
 
-        if (deleteButtons.length > 0) {
-            // Click the first "Delete from profile" button found
-            deleteButtons[0].click();
+        observer.observe(document, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    // Wait for the text "Delete from profile" to appear
+    waitForText("Delete from profile", function () {
+        const deleteButton = document.querySelector('button:contains("Delete from profile")');
+        if (deleteButton) {
+            deleteButton.click();
             console.log('Clicked "Delete from profile" button');
-
-            // Delay before confirming deletion
-            setTimeout(() => {
-                // Find all buttons with the text "Delete"
-                const confirmDeleteButtons = [...document.querySelectorAll('button')].filter(button => button.textContent.includes('Delete'));
-
-                if (confirmDeleteButtons.length > 0) {
-                    // Click the first "Delete" button found
-                    confirmDeleteButtons[0].click();
+            
+            // Wait for the text "Delete" to appear
+            waitForText("Delete", function () {
+                const confirmDeleteButton = document.querySelector('button:contains("Delete")');
+                if (confirmDeleteButton) {
+                    confirmDeleteButton.click();
                     console.log('Clicked "Delete" button');
 
-                    // Reload the page
-                    location.reload();
-                    console.log('Page reloaded');
+                    // Delay before replacing content
+                    setTimeout(() => {
+                        const customHTML = `
+                            <!-- Your custom HTML code here -->
+                        `;
+                        const contentToReplace = document.querySelector('#ember598 > div');
+                        if (contentToReplace) {
+                            contentToReplace.innerHTML = customHTML;
+                            console.log('Replaced content with custom HTML');
+
+                            // Wait for the text "Save" to appear
+                            waitForText("Save", function () {
+                                const saveButton = document.querySelector('button:contains("Save")');
+                                if (saveButton) {
+                                    saveButton.click();
+                                    console.log('Clicked "Save" button');
+                                } else {
+                                    console.log('No "Save" button found');
+                                }
+                            });
+                        } else {
+                            console.log('Content element not found for replacing');
+                        }
+                    }, 3000); // Adjust this delay as needed
                 } else {
                     console.log('No "Delete" button found');
                 }
-            }, 1000); // Adjust this delay as needed
+            });
         } else {
             console.log('No "Delete from profile" button found');
         }
-    }, 1000); // Adjust this delay as needed
+    });
 }
 
 // Execute the actions when the extension is clicked
